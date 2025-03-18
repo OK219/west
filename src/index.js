@@ -129,17 +129,59 @@ class Lad extends Dog {
     }
 }
 
-// Колода Шерифа, нижнего игрока.
+class Rogue extends Creature {
+    constructor(name = "Изгой", maxPower = 2) {
+        super(name, maxPower);
+    }
+
+    doBeforeAttack(gameContext, continuation) {
+        const targetCard = gameContext.oppositePlayer.table[gameContext.position];
+        if (!targetCard) {
+            continuation();
+            return;
+        }
+        const targetType = targetCard.constructor;
+        const abilitiesToSteal = [
+            'modifyDealedDamageToCreature',
+            'modifyDealedDamageToPlayer',
+            'modifyTakenDamage'
+        ];
+
+        const stealAbilitiesFromCard = (card) => {
+            if (card.constructor === targetType && !(card instanceof Rogue)) {
+                const cardPrototype = Object.getPrototypeOf(card);
+                abilitiesToSteal.forEach((ability) => {
+                    if (cardPrototype.hasOwnProperty(ability)) {
+                        if (!this.hasOwnProperty(ability)) {
+                            this[ability] = cardPrototype[ability];
+                        }
+                        delete cardPrototype[ability];
+                        card.updateView();
+                    }
+                });
+            }
+        };
+
+        const tables = gameContext.oppositePlayer.table;
+        tables.forEach((table) => {
+            stealAbilitiesFromCard(table);
+        });
+
+        this.updateView();
+        continuation();
+    }
+}
+
 const seriffStartDeck = [
     new Duck(),
     new Duck(),
     new Duck(),
+    new Gatling(),
 ];
-
-// Колода Бандита, верхнего игрока.
 const banditStartDeck = [
-    new Lad(),
-    new Lad(),
+    new Trasher(),
+    new Dog(),
+    new Dog(),
 ];
 
 
