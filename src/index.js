@@ -53,6 +53,25 @@ class Duck extends Creature {
     }
 }
 
+class Gatling extends Creature {
+    constructor(name = "Гатлинг", maxPower = 6) {
+        super(name, maxPower);
+    }
+
+    attack(gameContext, continuation) {
+        const taskQueue = new TaskQueue();
+        const {currentPlayer, oppositePlayer, position, updateView} = gameContext;
+        taskQueue.push(onDone => this.view.showAttack(onDone));
+        for (let i = 0; i < gameContext.oppositePlayer.table.length; i++) {
+            taskQueue.push(onDone => {
+                this.dealDamageToCreature(2, gameContext.oppositePlayer.table[i], gameContext, onDone);
+            });
+        }
+
+        taskQueue.continueWith(continuation);
+    };
+}
+
 class Dog extends Creature {
     constructor(name = "«Пес-бандит»", maxPower = 3) {
         super(name, maxPower);
