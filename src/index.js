@@ -77,6 +77,57 @@ class Trasher extends Dog {
     }
 }
 
+class Lad extends Dog {
+    constructor(name = "Браток", maxPower = 2) {
+        super(name, maxPower);
+    }
+
+    static getInGameCount() {
+        return this.inGameCount || 0;
+    }
+
+    static setInGameCount(value) {
+        this.inGameCount = value;
+    }
+
+    static getBonus() {
+        const count = this.getInGameCount();
+        return count * (count + 1) / 2;
+    }
+
+    doAfterComingIntoPlay(gameContext, continuation) {
+        super.doAfterComingIntoPlay(gameContext, () => {
+            Lad.setInGameCount(Lad.getInGameCount() + 1);
+            continuation();
+        });
+    }
+
+    doBeforeRemoving(continuation) {
+        super.doBeforeRemoving(() => {
+            Lad.setInGameCount(Lad.getInGameCount() - 1);
+            continuation();
+        });
+    }
+
+    modifyDealedDamageToCreature(value, toCard, gameContext, continuation) {
+        const bonus = Lad.getBonus();
+        continuation(value + bonus);
+    }
+
+    modifyTakenDamage(value, fromCard, gameContext, continuation) {
+        const bonus = Lad.getBonus();
+        continuation(Math.max(0, value - bonus));
+    }
+
+    getDescriptions() {
+        const descriptions = super.getDescriptions();
+        if (Lad.prototype.hasOwnProperty('modifyDealedDamageToCreature') ||
+            Lad.prototype.hasOwnProperty('modifyTakenDamage')) {
+            descriptions.push('Чем их больше, тем они сильнее');
+        }
+        return descriptions;
+    }
+}
 
 // Колода Шерифа, нижнего игрока.
 const seriffStartDeck = [
@@ -87,7 +138,8 @@ const seriffStartDeck = [
 
 // Колода Бандита, верхнего игрока.
 const banditStartDeck = [
-    new Trasher(),
+    new Lad(),
+    new Lad(),
 ];
 
 
